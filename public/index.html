@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CESI — Chatbot d’orientation</title>
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#F0EDE8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="app" data-theme="light">
+      <div id="sidebarOverlay" class="sidebarOverlay" hidden aria-hidden="true"></div>
+
+      <aside id="sidebar" class="sidebar" aria-label="Navigation latérale">
+        <div class="sideTop">
+          <div class="csi">
+            <div class="csiLogo">CESI</div>
+            <div class="csiText">
+              <div class="csiTitle">Orientation</div>
+              <div id="studentName" class="csiSub">Mohamed Amine BENKHEDDA</div>
+            </div>
+          </div>
+
+          <nav class="sideNav" aria-label="Sections de l’application">
+            <button type="button" class="sideNavBtn is-active" data-section="chat" aria-current="page">
+              Conseiller IA
+            </button>
+            <button type="button" class="sideNavBtn" data-section="results">
+              Mes résultats
+            </button>
+            <button type="button" class="sideNavBtn" data-section="resources">
+              Ressources
+            </button>
+            <button type="button" class="sideNavBtn" data-section="tools">
+              Outils & Simulateurs
+            </button>
+            <button type="button" class="sideNavBtn" data-section="faq">
+              FAQ
+            </button>
+          </nav>
+
+          <div class="sideSection sideSection--glass">
+            <div class="sideLabel">Progression questionnaire</div>
+            <div class="progress">
+              <div class="progressLine">
+                <div id="progressFill" class="progressFill" style="width: 0%"></div>
+              </div>
+              <div id="progressText" class="progressText">Étape 1/4</div>
+            </div>
+          </div>
+
+          <div class="sideSection sideSection--glass sideSection--countdown">
+            <div class="sideLabel">Baccalauréat 2026</div>
+            <div id="countdown" class="countdown" data-date="2026-06-07T08:00:00">
+              <div class="cdItem"><span id="cdDays">--</span><small>jours</small></div>
+              <div class="cdItem"><span id="cdHours">--</span><small>h</small></div>
+              <div class="cdItem"><span id="cdMins">--</span><small>m</small></div>
+            </div>
+          </div>
+
+          <div class="sideSection sideSection--glass">
+            <div class="sideLabel">Chiffres clés (MESRS 2024-2025)</div>
+            <div class="statsGrid">
+              <div class="stat">
+                <div id="statStudents" class="statNum">1.81M</div>
+                <div class="statHint">étudiants inscrits</div>
+              </div>
+              <div class="stat">
+                <div id="statEtab" class="statNum">120</div>
+                <div class="statHint">établissements</div>
+              </div>
+              <div class="stat">
+                <div id="statTech" class="statNum">65%</div>
+                <div class="statHint">orientés Tech</div>
+              </div>
+              <div class="stat">
+                <div class="statNum">300k+</div>
+                <div class="statHint">diplômés / an</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sideSection sideSection--glass">
+            <div class="sideLabel">Actions</div>
+            <div class="sideActions">
+              <button id="btnTheme" class="btn btn--sidebar ghost" type="button">Mode sombre</button>
+              <button id="btnShare" class="btn btn--sidebar ghost" type="button">Partager</button>
+              <button id="btnReset" class="btn btn--sidebar ghost" type="button">Réinitialiser</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sideBottom">
+          <div class="sideSection sideSection--glass">
+            <div class="sideLabel">Liens rapides</div>
+            <div id="resourcesMini" class="resources resources--mini"></div>
+          </div>
+        </div>
+      </aside>
+
+      <div class="mainWrap">
+        <header class="mobileBar">
+          <button id="btnMenu" class="btn btn--icon" type="button" aria-label="Ouvrir le menu">&#9776;</button>
+          <div class="mobileBarTitle">CESI Orientation</div>
+          <span class="mobileBarSpacer" aria-hidden="true"></span>
+        </header>
+
+        <main class="main" aria-label="Contenu principal">
+          <header class="topbar">
+            <div class="topbarLeft">
+              <h1 class="topbarTitle">Chatbot d’orientation (Algérie)</h1>
+              <p class="topbarSub">Questionnaire intelligent • Recommandations • Fiches détaillées • Contexte LMD &amp; PROGRES</p>
+            </div>
+            <div class="topbarActions">
+              <button id="btnLang" class="btn" type="button" style="border: 1px solid var(--border);">FR / AR</button>
+            </div>
+          </header>
+
+          <nav class="topNav" aria-label="Navigation principale">
+            <button type="button" class="topNavBtn is-active" data-section="chat">Conseiller IA</button>
+            <button type="button" class="topNavBtn" data-section="results">Mes résultats</button>
+            <button type="button" class="topNavBtn" data-section="tools">Outils</button>
+            <button type="button" class="topNavBtn" data-section="resources">Ressources</button>
+            <button type="button" class="topNavBtn" data-section="faq">FAQ</button>
+          </nav>
+
+          <section id="view-chat" class="view is-visible" aria-label="Conseiller IA">
+            <div class="content">
+              <section class="chatCard" aria-label="Conversation">
+                <div id="chat" class="chat" aria-live="polite" aria-relevant="additions"></div>
+
+                <div class="typingRow" id="typingRow" hidden>
+                  <div class="avatar bot" aria-hidden="true"></div>
+                  <div class="typingBubble" aria-label="Le chatbot rédige">
+                    <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+                  </div>
+                </div>
+
+                <div class="chips" id="chips" aria-label="Questions suggérées"></div>
+
+                <div class="composer">
+                  <input
+                    id="freeInput"
+                    class="input"
+                    placeholder="Pose une question (débouchés, salaires, LMD, PROGRES, bourses…)…"
+                    autocomplete="off"
+                  />
+                  <button id="btnSend" class="btn primary" type="button">Envoyer</button>
+                </div>
+              </section>
+
+              <section class="panelCard" aria-label="Questionnaire">
+                <div class="panelHead">
+                  <h2 class="panelTitle">Questionnaire intelligent</h2>
+                  <p class="panelDesc" id="panelDesc">Réponds étape par étape. Tu peux revenir en arrière.</p>
+                </div>
+                <div id="wizard" class="wizard"></div>
+                <div class="panelFoot">
+                  <button id="btnPrev" class="btn ghost" type="button">Retour</button>
+                  <button id="btnNext" class="btn primary" type="button">Continuer</button>
+                </div>
+              </section>
+            </div>
+          </section>
+
+          <section id="view-results" class="view" aria-label="Mes résultats" hidden>
+            <section class="results results--standalone" aria-label="Résultats">
+              <div class="resultsHead">
+                <h2 class="resultsTitle">Mes résultats</h2>
+                <div class="resultsActions">
+                  <button id="btnPdf" class="btn ghost" type="button">Exporter mon bilan PDF</button>
+                  <button id="btnExport" class="btn ghost" type="button">Exporter conversation</button>
+                </div>
+              </div>
+              <div id="top3" class="top3"></div>
+              <div id="details" class="details"></div>
+            </section>
+          </section>
+
+          <section id="view-resources" class="view" aria-label="Ressources" hidden>
+            <section class="resourcesPage cardPage" aria-label="Ressources et calendrier">
+              <h2 class="pageTitle">Ressources officielles</h2>
+              <p class="pageLead">Liens vérifiés vers les portails publics et établissements. Utilise-les pour compléter les informations données ici.</p>
+              <div id="resourcesFull" class="resources resources--full"></div>
+
+              <h3 class="pageSubtitle">Calendrier académique indicatif 2025–2026</h3>
+              <p class="muted small">Dates indicatives : confirme toujours auprès de ton établissement et du ministère.</p>
+              <div id="calendar" class="calendar"></div>
+
+              <h3 class="pageSubtitle">Vidéos &amp; ressources gratuites (sélection)</h3>
+              <ul id="extraResources" class="extraList"></ul>
+            </section>
+          </section>
+
+          <section id="view-tools" class="view" aria-label="Outils et Simulateurs" hidden>
+            <div class="cardPage">
+              <div class="panelHead">
+                <h2 class="panelTitle">Outils & Simulateurs</h2>
+                <p class="panelSubtitle">Simulateur ONOU, Glossaire LMD et Annuaire des écoles.</p>
+              </div>
+              <div class="toolsGrid">
+                <div id="tool-tabs" class="toolTabs">
+                  <div class="toolCat">
+                    <span class="toolCatTitle">Administratif</span>
+                    <div class="toolTabGroup">
+                      <button class="toolTabBtn is-active" data-tool="bourse">Bourse</button>
+                      <button class="toolTabBtn" data-tool="glossary">LMD</button>
+                      <button class="toolTabBtn" data-tool="checklist">Documents</button>
+                      <button class="toolTabBtn" data-tool="dates">Dates</button>
+                    </div>
+                  </div>
+                  <div class="toolCat">
+                    <span class="toolCatTitle">Simulateurs</span>
+                    <div class="toolTabGroup">
+                      <button class="toolTabBtn" data-tool="simul">Moyenne Bac</button>
+                      <button class="toolTabBtn" data-tool="riasec">Test RIASEC</button>
+                    </div>
+                  </div>
+                  <div class="toolCat">
+                    <span class="toolCatTitle">Orientation</span>
+                    <div class="toolTabGroup">
+                      <button class="toolTabBtn" data-tool="schools">Écoles</button>
+                      <button class="toolTabBtn" data-tool="stories">Parcours</button>
+                      <button class="toolTabBtn" data-tool="exams">Sujets</button>
+                      <button class="toolTabBtn" data-tool="market">Emploi</button>
+                      <button class="toolTabBtn" data-tool="planner">Planning</button>
+                      <button class="toolTabBtn" data-tool="budget">Budget</button>
+                      <button class="toolTabBtn" data-tool="zen">Zen</button>
+                    </div>
+                  </div>
+                </div>
+                <div id="tool-content" class="toolContent">
+                  <!-- Dynamic content injected by app.js -->
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="view-faq" class="view" aria-label="FAQ" hidden>
+            <section class="faq faq--standalone" aria-label="Questions fréquentes">
+              <h2 class="faqTitle">FAQ</h2>
+              <div id="faq" class="faqList"></div>
+            </section>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <dialog id="exportDialog" class="dialog" aria-labelledby="exportDialogTitle">
+      <div class="dialogInner">
+        <div class="dialogHead">
+          <div id="exportDialogTitle" class="dialogTitle">Export de la conversation</div>
+          <button id="btnCloseDialog" class="btn ghost" type="button">Fermer</button>
+        </div>
+        <textarea id="exportText" class="textarea" readonly></textarea>
+        <div class="dialogActions">
+          <button id="btnCopy" class="btn primary" type="button">Copier</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
