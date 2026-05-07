@@ -97,9 +97,9 @@ const STRESS_TIPS = [
 ];
 
 const BAC_COEFFS = {
-  "Sciences": { "Maths": 7, "Physique": 6, "Sciences": 6, "Arabe": 3, "Français": 2, "Anglais": 2, "Philo": 2, "Hist-Geo": 2, "Islamique": 2, "Sport": 1 },
-  "Maths": { "Maths": 9, "Physique": 6, "Sciences": 2, "Arabe": 3, "Français": 2, "Anglais": 2, "Philo": 2, "Hist-Geo": 2, "Islamique": 2, "Sport": 1 },
-  "Technique": { "Maths": 7, "Physique": 6, "Technologie": 7, "Arabe": 3, "Français": 2, "Anglais": 2, "Philo": 2, "Hist-Geo": 2, "Islamique": 2, "Sport": 1 },
+  "Sciences": { "Sciences": 6, "Maths": 5, "Physique": 5, "Arabe": 3, "Français": 2, "Anglais": 2, "Philo": 2, "Hist-Geo": 2, "Islamique": 2, "Sport": 1 },
+  "Maths": { "Maths": 7, "Physique": 6, "Sciences": 2, "Arabe": 3, "Français": 2, "Anglais": 2, "Philo": 2, "Hist-Geo": 2, "Islamique": 2, "Sport": 1 },
+  "Technique": { "Technologie": 6, "Maths": 6, "Physique": 5, "Arabe": 3, "Français": 2, "Anglais": 2, "Philo": 2, "Hist-Geo": 2, "Islamique": 2, "Sport": 1 },
   "Lettres": { "Arabe": 6, "Philo": 6, "Hist-Geo": 4, "Français": 3, "Anglais": 3, "Islamique": 2, "Maths": 2, "Sport": 1 }
 };
 
@@ -945,7 +945,10 @@ function setTheme(theme) {
   document.querySelector(".app")?.setAttribute("data-theme", state.theme);
   const meta = document.querySelector('meta[name="theme-color"]');
   if (meta) meta.setAttribute("content", state.theme === "dark" ? "#080E1A" : "#F0EDE8");
-  el("btnTheme").textContent = state.theme === "dark" ? "Mode clair" : "Mode sombre";
+  
+  const btn = el("btnTheme");
+  if (btn) btn.textContent = state.theme === "dark" ? "Mode clair" : "Mode sombre";
+  
   saveState();
 }
 
@@ -1019,7 +1022,10 @@ function addMessage(role, title, htmlBody) {
   const avatar = document.createElement("div");
   avatar.className = `avatar ${role}`;
   if (role === "bot") avatar.textContent = "AI";
-  else avatar.textContent = initialsFromName(el("studentName").textContent || "Moi");
+  else {
+    const sName = el("studentName")?.textContent || "Moi";
+    avatar.textContent = initialsFromName(sName);
+  }
 
   const bubble = document.createElement("div");
   bubble.className = `bubble ${role}`;
@@ -1485,12 +1491,14 @@ function renderDetails() {
 }
 
 function updateStudentNameFromProfile() {
-  // UI: on garde nom + prénom fournis (déjà dans sidebar), mais on peut personnaliser la ville
   const city = safeText(state.profile.ville);
+  const node = el("studentName");
+  if (!node) return;
+  
   if (city) {
-    el("studentName").textContent = `Mohamed Amine BENKHEDDA • ${city}`;
+    node.textContent = `Mohamed Amine BENKHEDDA • ${city}`;
   } else {
-    el("studentName").textContent = "Mohamed Amine BENKHEDDA";
+    node.textContent = "Mohamed Amine BENKHEDDA";
   }
 }
 
@@ -1719,26 +1727,24 @@ function exportTranscript() {
 }
 
 function shareResults() {
-  const top = state.lastRecommendations || [];
-  const names = top
-    .map((x) => {
-      const f = filieres.find((ff) => ff.id === x.id);
-      return f ? `${f.nom} (${x.pct}%)` : null;
-    })
-    .filter(Boolean)
-    .join(" • ");
+  const shareData = {
+    title: 'CESI — Chatbot d’orientation',
+    text: 'Découvre ce chatbot d’orientation intelligent pour t’aider dans ton parcours universitaire !',
+    url: window.location.href
+  };
 
-  const summary = [
-    "Bilan orientation (indicatif)",
-    buildContextSummary() || "Contexte: non renseigné",
-    names ? `Top 3: ${names}` : "Top 3: non disponible (questionnaire incomplet)",
-    "Conseil: teste 1 mini-projet par filière pendant 7 jours, puis compare ton plaisir + ta progression.",
-  ].join("\n");
-
-  navigator.clipboard
-    .writeText(summary)
-    .then(() => addMessage("bot", "Partage", "Résumé copié dans le presse-papiers."))
-    .catch(() => addMessage("bot", "Partage", "Je n’ai pas pu copier automatiquement. Tu peux utiliser l’export conversation."));
+  if (navigator.share) {
+    navigator.share(shareData)
+      .catch((err) => {
+        if (err.name !== 'AbortError') {
+          console.error('Erreur lors du partage:', err);
+        }
+      });
+  } else {
+    navigator.clipboard.writeText(window.location.href)
+      .then(() => addMessage("bot", "Partage", "Lien du site copié !"))
+      .catch(() => addMessage("bot", "Partage", "Impossible de copier le lien."));
+  }
 }
 
 function exportPdf() {
@@ -1760,7 +1766,8 @@ function exportPdf() {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(11);
   const ctx = buildContextSummary() || "Contexte: non renseigné";
-  y = writeParagraph(doc, `Étudiant: ${el("studentName").textContent}`, margin, y + 10, 520);
+  const sName = el("studentName")?.textContent || "Mohamed Amine BENKHEDDA";
+  y = writeParagraph(doc, `Étudiant: ${sName}`, margin, y + 10, 520);
   y = writeParagraph(doc, ctx, margin, y + 6, 520);
 
   const top = state.lastRecommendations || [];
@@ -1993,15 +2000,23 @@ function renderTools(toolId = "bourse") {
       content.appendChild(card);
     });
   } else if (toolId === "planner") {
-    content.innerHTML = `<h3>📅 Planificateur de Révisions</h3>
-      <p style="font-size:13px; margin-bottom:15px;">Générez votre emploi du temps pour le dernier mois avant le Bac.</p>
-      <div class="simForm">
-        <label>Matières à renforcer :<br>
-          <input type="text" id="weakSubjects" placeholder="ex: Maths, Physique" style="width:100%; margin-top:5px;">
+    content.innerHTML = `<h3>Planning de Révisions</h3>
+      <p style="font-size:13px; margin-bottom:15px; color:var(--text-muted);">Cliquez sur une cellule pour la modifier. Votre planning est sauvegardé automatiquement.</p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-bottom:15px; align-items:center;">
+        <label style="font-size:13px; font-weight:600;">Série :
+          <select id="planStream" style="padding:6px 10px; border-radius:6px; border:1px solid var(--border);">
+            <option value="Sciences">Sciences Exp.</option>
+            <option value="Maths">Maths</option>
+            <option value="Technique">Technique</option>
+            <option value="Lettres">Lettres</option>
+          </select>
         </label>
-        <button class="btn primary" style="margin-top:15px; width:100%;" onclick="generatePlan()">Générer mon planning</button>
+        <button class="btn primary" style="padding:8px 16px;" onclick="generatePlan()">Générer</button>
+        <button class="btn ghost" style="padding:8px 16px; border:1px solid var(--border);" onclick="clearPlanner()">Effacer tout</button>
       </div>
-      <div id="plannerResult"></div>`;
+      <div id="plannerGrid" style="overflow-x:auto;"></div>
+      <div id="plannerLegend" style="margin-top:12px;"></div>`;
+    renderPlannerGrid();
   } else if (toolId === "budget") {
     content.innerHTML = `<h3>Simulateur de Budget Étudiant</h3>
       <p style="font-size:13px; margin-bottom:15px;">Estimez vos dépenses mensuelles moyennes.</p>
@@ -2068,25 +2083,111 @@ window.calcBac = () => {
   });
   const avg = (totalPoints / totalCoeffs).toFixed(2);
   const res = el("bacResult");
-  res.innerHTML = `<div class="simResult" style="margin-top:20px; text-align:center;">
-    <p style="font-size:14px; margin-bottom:5px;">Moyenne estimée :</p>
-    <strong style="font-size:28px; color:var(--primary);">${avg} / 20</strong>
-    <p style="font-size:12px; margin-top:10px; opacity:0.8;">${avg >= 10 ? "Félicitations, vous seriez admis !" : "Continuez vos efforts pour atteindre la moyenne !"}</p>
+  res.innerHTML = `<div style="margin-top:20px; text-align:center; background: var(--surface-solid); border: 1px solid var(--border); border-radius: 12px; padding: 24px;">
+    <p style="font-size:14px; margin-bottom:8px; color: var(--text-muted);">Moyenne estimée :</p>
+    <strong style="font-size:36px; color:var(--primary); display:block; margin: 8px 0;">${avg} / 20</strong>
+    <p style="font-size:13px; margin-top:12px; padding: 8px 16px; border-radius: 8px; background: ${avg >= 10 ? 'rgba(0,200,150,0.15)' : 'rgba(230,57,70,0.15)'}; color: ${avg >= 10 ? '#00C896' : '#e63946'}; font-weight: 600;">${avg >= 10 ? "Félicitations, vous seriez admis !" : "Continuez vos efforts pour atteindre la moyenne !"}</p>
   </div>`;
 };
 
-window.generatePlan = () => {
-  const weak = el("weakSubjects").value || "Matières principales";
-  const days = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
-  const res = el("plannerResult");
-  res.innerHTML = `<div style="margin-top:20px;">
-    <h4 style="font-size:14px; margin-bottom:10px;">Planning Hebdomadaire Suggéré :</h4>
-    <div style="display:grid; gap:8px;">
-      ${days.map(d => `<div style="padding:10px; background:var(--chat-bot-bg); border-radius:6px; border-left:3px solid var(--primary);">
-        <strong style="font-size:12px;">${d}</strong>: ${weak} (2h), Arabe/Français (1h), Repos (30min)
-      </div>`).join("")}
-    </div>
-  </div>`;
+const PLANNER_KEY = "cesi-planner-data";
+const PLANNER_TIMES = ["08:00-09:30", "09:30-10:00", "10:00-11:30", "11:30-12:00", "12:00-13:00", "13:00-14:30", "14:30-15:00", "15:00-16:30", "16:30-17:00", "17:00-18:30"];
+const PLANNER_DAYS = ["Sam", "Dim", "Lun", "Mar", "Mer", "Jeu", "Ven"];
+const PLANNER_BREAK_SLOTS = [1, 3, 4, 8]; // indices of break rows (pause/déjeuner)
+
+function loadPlannerData() {
+  try { return JSON.parse(localStorage.getItem(PLANNER_KEY)) || {}; } catch { return {}; }
+}
+
+function savePlannerData(data) {
+  localStorage.setItem(PLANNER_KEY, JSON.stringify(data));
+}
+
+window.renderPlannerGrid = function() {
+  const grid = el("plannerGrid");
+  const legend = el("plannerLegend");
+  if (!grid) return;
+
+  const data = loadPlannerData();
+  const isBreak = (ri) => PLANNER_BREAK_SLOTS.includes(ri);
+
+  let html = `<table style="width:100%; border-collapse:collapse; font-size:12px; min-width:700px;">
+    <thead><tr>
+      <th style="padding:8px 6px; background:var(--primary); color:#fff; border:1px solid rgba(255,255,255,0.2); font-size:11px; min-width:90px; position:sticky; left:0; z-index:2;">Horaire</th>`;
+  PLANNER_DAYS.forEach(d => {
+    html += `<th style="padding:8px 6px; background:var(--primary); color:#fff; border:1px solid rgba(255,255,255,0.2); font-size:12px; font-weight:700; text-align:center;">${d}</th>`;
+  });
+  html += `</tr></thead><tbody>`;
+
+  PLANNER_TIMES.forEach((time, ri) => {
+    const brk = isBreak(ri);
+    const rowBg = brk ? "rgba(0,200,150,0.08)" : (ri % 2 === 0 ? "var(--chat-bot-bg)" : "var(--surface-solid)");
+    const label = brk ? (ri === 4 ? "Déjeuner" : "Pause") : "";
+
+    html += `<tr>
+      <td style="padding:6px 8px; font-weight:600; font-family:monospace; background:${rowBg}; border:1px solid var(--border); white-space:nowrap; position:sticky; left:0; z-index:1; font-size:11px;">${time}${label ? `<br><span style="font-size:10px; color:#00C896; font-family:sans-serif;">${label}</span>` : ""}</td>`;
+
+    PLANNER_DAYS.forEach((d, ci) => {
+      const key = `${ri}-${ci}`;
+      const val = data[key] || (brk ? (ri === 4 ? "Déjeuner" : "Pause") : "");
+      const cellBg = brk ? "rgba(0,200,150,0.08)" : rowBg;
+
+      html += `<td
+        contenteditable="true"
+        data-key="${key}"
+        style="padding:6px 8px; border:1px solid var(--border); background:${cellBg}; text-align:center; min-width:80px; cursor:text; outline:none; transition: background 0.15s; font-size:12px;"
+        onfocus="this.style.background='rgba(200,25,91,0.08)'; this.style.outline='2px solid var(--primary)';"
+        onblur="this.style.background='${cellBg}'; this.style.outline='none'; savePlannerCell(this);"
+      >${escapeHtml(val)}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table>`;
+  grid.innerHTML = html;
+
+  if (legend) {
+    legend.innerHTML = `<div style="display:flex; gap:12px; flex-wrap:wrap; font-size:11px; color:var(--text-muted); padding:8px; background:var(--chat-bot-bg); border-radius:8px; border:1px solid var(--border);">
+      <span>Cliquez sur une cellule pour taper votre matière</span>
+      <span style="color:var(--primary); font-weight:600;">Les modifications sont sauvegardées automatiquement</span>
+    </div>`;
+  }
+};
+
+window.savePlannerCell = function(cell) {
+  const key = cell.dataset.key;
+  const data = loadPlannerData();
+  data[key] = cell.textContent.trim();
+  savePlannerData(data);
+};
+
+window.generatePlan = function() {
+  const stream = el("planStream")?.value || "Sciences";
+  const coeffs = BAC_COEFFS[stream] || BAC_COEFFS["Sciences"];
+  const subjects = Object.entries(coeffs).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+  const data = {};
+
+  PLANNER_TIMES.forEach((_, ri) => {
+    const brk = PLANNER_BREAK_SLOTS.includes(ri);
+    PLANNER_DAYS.forEach((_, ci) => {
+      const key = `${ri}-${ci}`;
+      if (brk) {
+        data[key] = ri === 4 ? "Déjeuner" : "Pause";
+      } else {
+        // Rotate subjects across days and slots
+        const idx = (ri + ci) % subjects.length;
+        data[key] = subjects[idx];
+      }
+    });
+  });
+
+  savePlannerData(data);
+  renderPlannerGrid();
+};
+
+window.clearPlanner = function() {
+  localStorage.removeItem(PLANNER_KEY);
+  renderPlannerGrid();
 };
 
 window.calcBudget = () => {
@@ -2507,7 +2608,6 @@ function init() {
   }
 
   showSection(state.activeSection);
-  updateStudentNameFromProfile();
 }
 
 init();
