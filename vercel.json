@@ -9,8 +9,5 @@
         { "key": "Referrer-Policy", "value": "no-referrer" }
       ]
     }
-  ],
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
   ]
 }
